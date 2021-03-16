@@ -64,13 +64,13 @@ class ATACseqSample:
 
         # Files in the root of the sample dir
         prefix = pjoin(self.sample_root, self.sample_name)
-        self.fastqc_initial_output = (
-            pjoin(
-                self.sample_root,
-                os.path.splitext(os.path.basename(self.data_source))[0],
-            )
-            + "_fastqc.zip"
-        )
+        self.fastqc_initial_output = (pjoin(
+            self.sample_root,
+            os.path.splitext(
+                os.path.basename(self.data_source if type(self.data_source) ==
+                                 str else self.data_source[0]))[0],
+        ) + "_fastqc.zip")
+
         self.fastqc = prefix + ".fastqc.zip"
         self.trimlog = prefix + ".trimlog.txt"
         self.aln_rates = prefix + ".aln_rates.txt"
@@ -178,7 +178,7 @@ def main():
 
     print(sample)
     # Check if merged
-    if len(sample.data_source.split(" ")) > 1:
+    if (type(sample.data_source) == list) & (len(sample.data_source) > 1):
         sample.merged = True
     else:
         sample.merged = False
@@ -246,12 +246,11 @@ def process(sample, pipe_manager, args):
     tk = NGSTk(pm=pipe_manager)
 
     # Merge Bam files if more than one technical replicate
-    if len(sample.data_source.split(" ")) > 1:
+    # if len(sample.data_source.split(" ")) > 1:
+    if (type(sample.data_source) == list) & (len(sample.data_source) > 1):
         pipe_manager.timestamp("Merging bam files from replicates")
         cmd = tk.merge_bams(
-            input_bams=sample.data_source.split(
-                " "
-            ),  # this is a list of sample paths
+            input_bams=sample.data_source,  # this is a list of sample paths
             merged_bam=sample.unmapped,
         )
         pipe_manager.run(cmd, sample.unmapped, shell=True)
